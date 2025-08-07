@@ -17,6 +17,8 @@ public class MazeRenderer : MonoBehaviour
     public float endMaxDis = 1.3f;    // 玩家到达终点的最大距离
     public GameObject winText;        // 胜利文本对象
     public FireworkController fireworkController; // 烟花控制器
+    public System.Random random = new System.Random(); // 随机数生成器
+    public long timestamp = 0; // 时间戳
 
     public void Start()
     {
@@ -56,7 +58,7 @@ public class MazeRenderer : MonoBehaviour
         //}
 
         // 计算迷宫中心偏移量（考虑墙壁实际大小）
-        float offsetX = (width - 1) * 0.5f * 5f; // X轴缩放=5
+        float offsetX = (width - 1) * 0.5f * 5f;  // X轴缩放=5
         float offsetZ = (height - 1) * 0.5f * 5f; // Z轴缩放=5
 
         // 临时显示Wall预制体（仅用于验证）
@@ -82,7 +84,7 @@ public class MazeRenderer : MonoBehaviour
                 else if (x == width - 1 && y == height - 2)
                 {
                     endPosition = position; // 设置终点位置
-                    endPosition.y = 4.55f; // 终点位置稍微降低一些，方便玩家触发
+                    endPosition.y = 4.55f;  // 终点位置稍微降低一些，方便玩家触发
                     Debug.Log("终点位置已设置: " + endPosition);
                 }
                 if (mazeData[x][y])
@@ -116,7 +118,36 @@ public class MazeRenderer : MonoBehaviour
             reachedEnd = true;
             Vector3 targetPos = new Vector3(endPosition.x, 40, endPosition.z);
             fireworkController.PlayAtPosition(targetPos);
-            Debug.Log("恭喜！玩家已到达迷宫终点！");
+            Debug.Log("The player has reached the end of the maze.");
         }
+
+        // 物品生成机制
+        // 如果已经通关，则不生成。
+        //if (!reachedEnd && DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp >= 1)
+        if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - timestamp >= 1)
+        {
+            timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            // 每秒进行一次尝试，而不是每帧。
+
+            // 十分之一的概率尝试，如果随机到的这一格不为墙则生成。
+            if (random.Next(10) == 0)
+            {
+                int x = random.Next(mazeData.Count);
+                int y = random.Next(mazeData[0].Count);
+                if (!mazeData[x][y])
+                {
+                    // 计算迷宫中心偏移量（考虑墙壁实际大小）
+                    float offsetX = (mazeData.Count - 1) * 0.5f * 5f;  // X轴缩放=5
+                    float offsetZ = (mazeData[0].Count - 1) * 0.5f * 5f; // Z轴缩放=5
+                    Vector3 position = new Vector3(
+                        x * 5f - offsetX, // X轴缩放=5
+                        5.0f,
+                        y * 5f - offsetZ  // Z轴缩放=5
+                    );
+                    
+                }
+            }
+        }
+        
     }
 }
